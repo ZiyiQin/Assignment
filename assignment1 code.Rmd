@@ -1,0 +1,185 @@
+---
+title: "assignment1"
+output: html_document
+---
+
+## 1.(b)
+
+```{r, fig.width=6, fig.height=4}
+w = rnorm(200,0,1)
+x= w^2+lag(w,-1)^2-1
+plot(x)
+acf(x)
+```
+
+The sample ACF at lag 0 is close to 1; the sample ACF at lag 1 is close to 1/4; but the sample ACF is not close to 0 as the lag is greater than 2.
+
+## 3.(a)
+```{r, fig.width=6, fig.height=4} 
+set.seed(907)
+num=400;t=1:num
+w1=rt(num,10)
+xt=ts(2.5*cos(2*pi*t/15+0.2*pi)+w1)
+plot.ts(xt,main=expression(2.5*cos(2*pi*t/15+0.2*pi)+ t(10)))
+```
+
+## 3.(b)
+
+```{r, fig.width=6, fig.height=4} 
+fit=lm(xt~ 0+cos(2*pi*t/15+0.2*pi) + sin(2*pi*t/15+0.2*pi), na.action=NULL) #prewhitening of Y
+xt_fit <- fitted(fit)
+layout(matrix(1:2, nrow=2), heights=c(2, 2))
+plot(xt_fit)
+plot.ts(xt)
+summary(fit)
+Yw=resid(fit)
+layout(1)
+plot(Yw,main=expression(residual))
+```
+
+The interpret is 0.
+
+$\beta_1 = 2.48174$
+
+$\beta_2 = 0.17314$
+
+They are significant.
+
+## 5.(a)
+
+```{r, fig.width=6, fig.height=4} 
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+install.packages("astsa")
+library("astsa")
+data(jj)
+xt=log(jj)
+
+t <- time(jj)
+Q1 <- ifelse(cycle(jj) == 1, 1, 0)
+Q2 <- ifelse(cycle(jj) == 2, 1, 0)
+Q3 <- ifelse(cycle(jj) == 3, 1, 0)
+model <- lm(xt ~ t + Q1 + Q2 + Q3)
+xt_hat <- fitted(model)
+
+
+```
+
+We include only three quarters (Q1, Q2, Q3) as dummy variables because including all four would lead to multicollinearity (perfect correlation between the dummy variables). By omitting the fourth quarter, we avoid this issue. The effect of the fourth quarter is captured in the intercept term $\beta_0$
+
+## 5.(b)
+
+```{r, fig.width=6, fig.height=4} 
+summary(model)
+```
+
+The estimated annual increase in the logged earnings per share is 0.1672.
+
+## 5.(c)
+
+```{r, fig.width=6, fig.height=4} 
+alpha2 <- coef(model)['Q2']
+alpha3 <- coef(model)['Q3']
+
+# Compute the change from Q2 to Q3
+delta <- alpha3 - alpha2
+percent_change <- (delta - 1) * 100
+percent_change
+```
+
+The logged earnings rate decreases for 92.98917%.
+
+## 5.(d)
+
+```{r, fig.width=6, fig.height=4} 
+res=resid(model)
+plot(res,type = "l")
+acf(res)
+plot.ts(xt, type = "l")
+lines(ts(xt_hat, start = start(xt), frequency = frequency(xt)), lwd = 1, col="red")
+```
+
+The model appear to fit the data well and the residuals look white.
+
+## 6(a)
+
+```{r, fig.width=10, fig.height=8} 
+num = 1:100
+w1 = rnorm(100); x1 = cumsum(w1); wd1 = w1 +.01; xd1 = cumsum(wd1)
+w2 = rnorm(100); x2 = cumsum(w2); wd2 = w1 +.01; xd2 = cumsum(wd2)
+w3 = rnorm(100); x3 = cumsum(w3); wd3 = w1 +.01; xd3 = cumsum(wd3)
+w4 = rnorm(100); x4 = cumsum(w4); wd4 = w1 +.01; xd4 = cumsum(wd4)
+par(mfrow = c(2, 2))
+plot.ts(x1, main="Random Walk Series 1")
+fit1=lm(xd1~0+time(xd1))
+xt1 <- fitted(fit1)
+par(new = TRUE)
+lines(time(xt1), xt1, lwd = 2, col="red") 
+miu=.01*num
+lines(time(xd1),miu , lwd = 2, col="green") 
+plot.ts(x2, main="Random Walk Series 2")
+fit2=lm(xd2~0+time(xd2))
+xt2<- fitted(fit2)
+par(new = TRUE)
+lines(time(xt2), xt2, lwd = 2, col="red") 
+miu=.01*num
+lines(time(xd2),miu , lwd = 2, col="green") 
+plot.ts(x3, main="Random Walk Series 3")
+fit3=lm(xd3~0+time(xd3))
+par(new = TRUE)
+lines(time(x3), fitted(fit3), lwd = 2, col="red") 
+miu=.01*num
+lines(time(xd3),miu , lwd = 2, col="green") 
+plot.ts(x4, main="Random Walk Series 4")
+fit4=lm(xd4~0+time(xd4))
+par(new = TRUE)
+lines(time(x4), fitted(fit4), lwd = 2, col="red") 
+miu=.01*num
+lines(time(xd4),miu , lwd = 2, col="green") 
+```
+
+## 6(b)
+
+```{r, fig.width=10, fig.height=8} 
+num=100; t=1:num     
+w5=rnorm(num)
+w6=rnorm(num)
+w7=rnorm(num)
+w8=rnorm(num)
+yt5 = .01*t + w5
+yt6 = .01*t + w6
+yt7 = .01*t + w7
+yt8 = .01*t + w8
+par(mfrow = c(2, 2))
+plot.ts(yt5)
+fit5=lm(yt5~0+time(yt5))
+par(new = TRUE)
+lines(time(yt5), fitted(fit5), lwd = 2, col="red",type = "l") 
+miu=.01*t
+par(new = TRUE)
+lines(time(miu),miu,lwd = 2, col="blue",type = "l")
+plot.ts(yt6)
+fit6=lm(yt6~0+time(yt6))
+par(new = TRUE)
+lines(time(yt6), fitted(fit6), lwd = 2, col="red",type = "l") 
+par(new = TRUE)
+lines(time(miu),miu,lwd = 2, col="blue",type = "l")
+plot.ts(yt7)
+fit7=lm(yt7~0+time(yt7))
+par(new = TRUE)
+lines(time(yt7), fitted(fit7), lwd = 2, col="red",type = "l") 
+par(new = TRUE)
+lines(time(miu),miu,lwd = 2, col="blue",type = "l")
+plot.ts(yt8)
+fit8=lm(yt8~0+time(yt8))
+par(new = TRUE)
+lines(time(yt8), fitted(fit8), lwd = 2, col="red",type = "l") 
+par(new = TRUE)
+lines(time(miu),miu,lwd = 2, col="blue",type = "l")
+```
+
+
+## 6(c)
+
+The noise between (a) and (b) are different.
+
+
